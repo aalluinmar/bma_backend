@@ -1,0 +1,24 @@
+version: '1'
+services:
+  postgres:
+    image: postgres:16.1
+    container_name: bma_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - 5432:5432
+  web:
+    build: .
+    container_name: bma_backend
+    volumes:
+      - .:/code
+      - ./auth:/auth
+    ports:
+      - 8000:8000
+    links:
+      - postgres
+    depends_on:
+      - postgres
+    command: bash entrypoint.sh
