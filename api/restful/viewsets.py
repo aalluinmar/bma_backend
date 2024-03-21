@@ -8,9 +8,18 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.models import UserData
-from api.restful.serializers import UserLoginSerializer, UserSerializer
-from bma_backend.permissions import UserPermissions
+from api.models import UserData, BuildingDetails, ApartmentDetails
+from api.restful.serializers import (
+    ApartmentDetailsSerializer,
+    BuildingDetailsSerializer,
+    UserLoginSerializer,
+    UserSerializer,
+)
+from bma_backend.permissions import (
+    ApartmentPermissions,
+    BuildingPermissions,
+    UserPermissions
+)
 
 
 class CustomPagination(LimitOffsetPagination):
@@ -24,6 +33,9 @@ class CustomPagination(LimitOffsetPagination):
 
 
 class UsersViewSet(viewsets.ModelViewSet):
+    """
+    CRUD Operations for listing/creating/deleting/updating users.
+    """
     queryset = UserData.objects.all().order_by("id")
     serializer_class = UserSerializer
     lookup_field = "id"
@@ -31,6 +43,9 @@ class UsersViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination  # Enable pagination
 
     def get_object(self):
+        """
+        Gets Object for the queryset Model.
+        """
         queryset = self.filter_queryset(self.get_queryset())
         obj = queryset.first()  # Get the first object
         if obj is None:
@@ -39,6 +54,9 @@ class UsersViewSet(viewsets.ModelViewSet):
         return obj
 
     def get_queryset(self):
+        """
+        Gets the Queryset based on the given Id.
+        """
         if 'id' in self.kwargs:  # If 'id' is present in URL kwargs, it's a detail view
             return UserData.objects.filter(id=self.kwargs['id'])
         else:
@@ -46,11 +64,17 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 
 class UserLoginViewSet(viewsets.ViewSet):
+    """
+    Viewset for User login API.
+    """
     permission_classes = [AllowAny]
     serializer_class = UserLoginSerializer
 
     @swagger_auto_schema(request_body=UserLoginSerializer)
     def create(self, request):
+        """
+        API Call for verifying user given credentials.
+        """
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data["username"]
@@ -70,3 +94,38 @@ class UserLoginViewSet(viewsets.ViewSet):
             )
         else:
             return Response({"message": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class BuildingDetailsViewSet(viewsets.ModelViewSet):
+    """
+    CRUD Operations for listing/creating/updating building details.
+    """
+    queryset = BuildingDetails.objects.all().order_by("building_number")
+    serializer_class = BuildingDetailsSerializer
+    permission_classes = [BuildingPermissions]
+    http_method_names = ["get", "post", "put", "patch"]
+    pagination_class = CustomPagination  # Enable pagination
+
+
+class ApartmentDetailsViewSet(viewsets.ModelViewSet):
+    """
+    CRUD Operations for listing/creating/updating apartment details.
+    """
+    queryset = ApartmentDetails.objects.all().order_by("apartment_number")
+    serializer_class = ApartmentDetailsSerializer
+    permission_classes = [ApartmentPermissions]
+    http_method_names = ["get", "post", "put", "patch"]
+    pagination_class = CustomPagination  # Enable pagination
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
+        serializer.is_valid(raise_exception=True)
+        
+        if isinstance(request.data, list):
+            instances = ApartmentDetails.objects.bulk_create([ApartmentDetails(**item) for item in serializer.validated_data])
+            serializer = self.get_serializer(instances, many=True)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+

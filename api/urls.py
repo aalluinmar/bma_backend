@@ -4,10 +4,17 @@ from drf_yasg.views import get_schema_view
 from rest_framework import routers, permissions
 from rest_framework.documentation import include_docs_urls
 
-from api.restful.viewsets import UsersViewSet, UserLoginViewSet
+from api.restful.viewsets import (
+    UsersViewSet,
+    UserLoginViewSet,
+    BuildingDetailsViewSet,
+    ApartmentDetailsViewSet
+)
 
 router = routers.DefaultRouter()
 router.register(r"users", UsersViewSet)
+router.register(r"buildings", BuildingDetailsViewSet)
+router.register(r"apartments", ApartmentDetailsViewSet)
 
 schema_view = get_schema_view(
     openapi.Info(

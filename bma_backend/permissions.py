@@ -29,3 +29,39 @@ class UserPermissions(permissions.BasePermission):
             # Only the requested user can see their self details but not other user details
             return True
         return False  # Returns False if request doesn't fit.
+
+
+class BuildingPermissions(permissions.BasePermission):
+    """
+    Only Admin users can perform all Building related operations.
+    """
+
+    def has_permission(self, request, view):
+        # Only superuser/admin can perform all actions
+        if (
+                (hasattr(request.user, "is_superuser") and request.user.is_superuser)
+                    or
+                (hasattr(request.user, "is_admin") and request.user.is_admin)
+            ):
+            return True
+        return False
+
+
+class ApartmentPermissions(permissions.BasePermission):
+    """
+    Only Admin users can perform all Apartment related operations.
+    """
+
+    def has_permission(self, request, view):
+        # Only superuser/admin can perform all actions
+        if (
+                (
+                    (hasattr(request.user, "is_superuser") and request.user.is_superuser)
+                        or
+                    (hasattr(request.user, "is_admin") and request.user.is_admin)
+                )
+                and
+                request.method in ["POST", "PUT", "PATCH"]
+            ):
+            return True
+        return False
