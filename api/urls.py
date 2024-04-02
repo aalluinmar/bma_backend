@@ -8,13 +8,17 @@ from api.restful.viewsets import (
     UsersViewSet,
     UserLoginViewSet,
     BuildingDetailsViewSet,
-    ApartmentDetailsViewSet
+    ApartmentDetailsViewSet,
+    ParkingDetailsViewSet,
+    TenantViewSet,
 )
 
 router = routers.DefaultRouter()
 router.register(r"users", UsersViewSet)
 router.register(r"buildings", BuildingDetailsViewSet)
 router.register(r"apartments", ApartmentDetailsViewSet)
+router.register(r"tenants", TenantViewSet)
+router.register(r"parkings", ParkingDetailsViewSet)
 
 schema_view = get_schema_view(
     openapi.Info(

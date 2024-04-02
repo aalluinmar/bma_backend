@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'health_check',
     'django_countries',
     'localflavor',
+    'django_filters',
 ]
 
 MIDDLEWARE = [

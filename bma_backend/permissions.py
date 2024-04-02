@@ -31,9 +31,9 @@ class UserPermissions(permissions.BasePermission):
         return False  # Returns False if request doesn't fit.
 
 
-class BuildingPermissions(permissions.BasePermission):
+class IsAdminPermissions(permissions.BasePermission):
     """
-    Only Admin users can perform all Building related operations.
+    Only Admin users can perform all Building/Tenant related operations.
     """
 
     def has_permission(self, request, view):
@@ -55,13 +55,36 @@ class ApartmentPermissions(permissions.BasePermission):
     def has_permission(self, request, view):
         # Only superuser/admin can perform all actions
         if (
-                (
-                    (hasattr(request.user, "is_superuser") and request.user.is_superuser)
-                        or
-                    (hasattr(request.user, "is_admin") and request.user.is_admin)
-                )
-                and
-                request.method in ["POST", "PUT", "PATCH"]
+                (hasattr(request.user, "is_superuser") and request.user.is_superuser)
+                    or
+                (hasattr(request.user, "is_admin") and request.user.is_admin)
             ):
+            return True
+        elif (request.method == "GET"):  # Any user can get the apartments list
+            return True
+        return False
+
+
+class ParkingPermissions(permissions.BasePermission):
+    """
+    1. Admin users can perform all Parking related operations.
+    2. Active users can only update their parking details.
+    """
+
+    def has_permission(self, request, view):
+        # Only superuser/admin can perform all actions
+        if (
+                (hasattr(request.user, "is_superuser") and request.user.is_superuser)
+                    or
+                (hasattr(request.user, "is_admin") and request.user.is_admin)
+            ):
+            return True
+        elif (
+                request.method == "PUT" or request.method == "PATCH"
+                    and
+                (hasattr(request.user, "is_active") and request.user.is_active)
+            ):  # Only active user can update their parking details
+            return True
+        elif (request.method == "GET"):  # Any user can get the parking list
             return True
         return False
