@@ -151,5 +151,4 @@ class ParkingDetailsFilter(filters.FilterSet):
             "apartment_number": constants.EXACT_FIELD_TYPE_FILTER,
             "parking_type": constants.EXACT_FIELD_TYPE_FILTER,
             "parking_status": constants.EXACT_FIELD_TYPE_FILTER,
-            "parking_fee": constants.NUMBER_TYPE_FILTER,
         }

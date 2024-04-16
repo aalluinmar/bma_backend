@@ -15,5 +15,5 @@ class TenantViewSet(BaseFilterViewSet):
     queryset = Tenant.objects.all()
     serializer_class = TenantSerializer
     permission_classes = [IsAdminPermissions]
-    http_method_names = ["get", "post", "put", "patch"]
+    http_method_names = ["get", "patch"]
     pagination_class = CustomPagination  # Enable pagination

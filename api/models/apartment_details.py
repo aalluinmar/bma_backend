@@ -20,9 +20,10 @@ class ApartmentDetails(Audit):
         related_name="apartments",
         help_text="The building in which the apartment is located."
     )
-    price = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)],  # Minimum value set to $1
-        help_text="Enter the Price of the Apartment."
+    price = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        validators=[MinValueValidator(1.0)],
+        help_text="Rent amount per month."
     )
     description = models.TextField(
         max_length=500, help_text="Description of the apartment."

@@ -88,3 +88,15 @@ class ParkingPermissions(permissions.BasePermission):
         elif (request.method == "GET"):  # Any user can get the parking list
             return True
         return False
+
+
+class ActiveUserPermissions(permissions.BasePermission):
+    """
+    Only Active users can perform all the operations.
+    """
+    
+    def has_permission(self, request, view):
+        # Only active user can perform all actions
+        if (hasattr(request.user, "is_active") and request.user.is_active):
+            return True
+        return False

@@ -1,6 +1,7 @@
 import uuid
 
-from datetime import date, timedelta
+from datetime import date
+from dateutil.relativedelta import relativedelta
 
 from django.db import models
 from django.core.validators import MinValueValidator
@@ -72,6 +73,7 @@ class Tenant(Audit):
         validators=[MinValueValidator(0.0)],
         help_text="Fee charged for breaking the lease."
     )
+
     # TODO: Notes as JSONField to store additional information with date field and description
     notes = models.TextField(
         blank=True,
@@ -89,7 +91,8 @@ class Tenant(Audit):
 
         # Calculate move_out_date based on move_in_date and lease_duration
         move_in_date = self.move_in_date
-        move_out_date = move_in_date + timedelta(months=lease_duration)
+        move_out_date = move_in_date + relativedelta(months=lease_duration)
+        # move_out_date = move_in_date + timedelta(months=lease_duration)
 
         # Validate move_out_date
         if move_out_date <= move_in_date:
@@ -107,10 +110,6 @@ class Tenant(Audit):
         if move_out_date < move_in_date:
             raise ValidationError("Lease end date is before the lease start date.")
 
-        # Validate lease_break_date 
-        if self.lease_break_date and self.lease_break_date < move_in_date:
-            raise ValidationError("Lease break date is before the lease start date.")
-
         # Validate if the same tenants start date is not in the past
         if self.move_in_date < date.today():
             raise ValidationError("Tenant start date cannot be in the past.")
@@ -119,17 +118,21 @@ class Tenant(Audit):
         if self.move_out_date < date.today():
             raise ValidationError("Tenant end date cannot be in the past.")
 
+        # Validate lease_break_date 
+        if self.lease_break_date and self.lease_break_date < move_in_date:
+            raise ValidationError("Lease break date is before the lease start date.")
+
         # Validate if the same lease break date is not in the past
         if self.lease_break_date and self.lease_break_date < date.today():
             raise ValidationError("Lease break date cannot be in the past.")
 
-        # Validate if the same tenants start date is not greater than the end date
-        if self.move_in_date > self.move_out_date:
-            raise ValidationError("Tenant start date cannot be greater than end date.")
-
         # Validate if the same lease break date is not greater than the end date
         if self.lease_break_date and self.lease_break_date > self.move_out_date:
             raise ValidationError("Lease break date cannot be greater than end date.")
+
+        # Validate if the same tenants start date is not greater than the end date
+        if self.move_in_date > self.move_out_date:
+            raise ValidationError("Tenant start date cannot be greater than end date.")
 
         # Validate if the same lease break fee is provided if lease is broken
         if self.lease_break_flag and not self.lease_break_fee:

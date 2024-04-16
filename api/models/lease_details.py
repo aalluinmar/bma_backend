@@ -11,38 +11,24 @@ from api.models.audit import Audit
 from api.models.apartment_details import ApartmentDetails
 from api.utils.utils import generate_unique_integer_number
 from api.constants import constants as constants
+from api.constants.constants import default_fees, default_discounts
+from dateutil.relativedelta import relativedelta
 
 
-# Default callable for fees
-def default_fees():
-    return {
-        "damage_fee": 0.0,
-        "break_lease_fee": 0.0,
-        "pets_fee": 0.0,
-        "trash_fee": 0.0,
-        "sewage_fee": 0.0,
-        "water_fee": 0.0,
-        "electricity_fee": 0.0,
-        "gas_fee": 0.0,
-        "internet_fee": 0.0,
-        "cable_fee": 0.0,
-        "parking_fee": 0.0,
-        "miscellaneous_fee": 0.0,
-    }
+def validate_default_fees(value):
+    if set(value.keys()) != set(constants.default_fees().keys()) or len(value) != len(constants.default_fees()):
+        raise ValidationError("Only the default keys are allowed for fees.")
 
-# Default callable for discounts
-def default_discounts():
-    return {
-        "initial_discount": 0.0,
-        "break_lease_discount": 0.0,
-        "extension_discount": 0.0,
-    }
+def validate_default_discounts(value):
+    if set(value.keys()) != set(constants.default_discounts().keys()) or len(value) != len(constants.default_discounts()):
+        raise ValidationError("Only the default keys are allowed for discount fees.")
+
 
 class LeaseDetails(Audit):
     """
     Lease for an Apartment.
     """
-    agreement_number = models.AutoField(
+    agreement_number = models.BigAutoField(
         primary_key=True,
         editable=False,
         default=generate_unique_integer_number,
@@ -50,7 +36,7 @@ class LeaseDetails(Audit):
     )
     start_date = models.DateField(help_text="Start date of the lease.")
     end_date = models.DateField(help_text="End date of the lease.")
-    duration = models.PositiveSmallIntegerField(
+    duration = models.PositiveIntegerField(
         choices=constants.LEASE_DURATION_CHOICES,
         help_text="Duration of the lease in months."
     )
@@ -98,6 +84,7 @@ class LeaseDetails(Audit):
         blank=True,
         null=True,
         default=default_fees,
+        validators=[validate_default_fees],
         help_text="JSON field to store various fees associated with the lease."
     )
 
@@ -106,6 +93,7 @@ class LeaseDetails(Audit):
         blank=True,
         null=True,
         default=default_discounts,
+        validators=[validate_default_discounts],
         help_text="JSON field to store various discounts associated with the lease."
     )
 
@@ -137,7 +125,7 @@ class LeaseDetails(Audit):
     def save(self, *args, **kwargs):
         # Compute end date if not provided
         if not self.end_date:
-            self.end_date = self.start_date + timedelta(months=self.duration)
+            self.end_date = self.start_date + relativedelta(months=self.duration)
 
         super().save(*args, **kwargs)
 
@@ -153,8 +141,6 @@ class LeaseDetails(Audit):
         # Ensure lease duration is valid
         if self.duration not in [6, 9, 12]:
             raise ValidationError("Invalid lease duration.")
-
-        # 
 
         super().clean()
 

@@ -1,8 +1,16 @@
 
 from django.db import models
+from django.db.models import JSONField
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 
 from api.models import Audit, BuildingDetails, ApartmentDetails
+from api.constants.constants import default_parking_fees
+
+
+def validate_parking_fees(value):
+    if set(value.keys()) != set(default_parking_fees().keys()) or len(value) != len(default_parking_fees()):
+        raise ValidationError("Only the default keys are allowed for parking fees.")
 
 
 class ParkingDetails(Audit):
@@ -54,10 +62,13 @@ class ParkingDetails(Audit):
         default="available",
         help_text="Status of the parking space."
     )
-    parking_fee = models.DecimalField(
-        max_digits=10, decimal_places=2,
-        validators=[MinValueValidator(0.0)],
-        help_text="Fee associated with the parking space."
+
+    # Store fees associated with the parking type
+    parking_fee = JSONField(
+        default=default_parking_fees,
+        validators=[validate_parking_fees],
+        help_text="JSON field to store fees associated with the parking space type. " +
+            f"Eg: Dictionary of covered, uncovered, garage fees. {(default_parking_fees())}"
     )
 
     class Meta:
