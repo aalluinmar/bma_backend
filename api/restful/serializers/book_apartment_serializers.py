@@ -85,7 +85,6 @@ class BookApartmentSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        print(data)
         # Validate the provided apartment number
         apartment_number = data.get("apartment_number", None)
         if not ApartmentDetails.objects.filter(apartment_number=apartment_number.apartment_number, is_available=True).exists():
@@ -107,11 +106,6 @@ class BookApartmentSerializer(serializers.ModelSerializer):
         """
         tenants_list = list()
         tenants_data = validated_data.pop("tenants_list")
-        # from dateutil.relativedelta import relativedelta
-        # end_date = validated_data.get("start_date") + relativedelta(months=validated_data.get("duration"))
-        # validated_data["end_date"] = end_date
-        # from datetime import datetime
-        # print(validated_data, "------------------", end_date)
         lease = LeaseDetails.objects.create(**validated_data)
 
         for tenant_data in tenants_data:
